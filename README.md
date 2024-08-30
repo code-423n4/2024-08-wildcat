@@ -1,31 +1,8 @@
+# The Wildcat Protocol
 
-# Repo setup
+Mr Anderson, welcome back. We missed you.
 
-## ⭐️ Sponsor: Add code to this repo
-
-- [ ] Create a PR to this repo with the below changes:
-- [ ] Confirm that this repo is a self-contained repository with working commands that will build (at least) all in-scope contracts, and commands that will run tests producing gas reports for the relevant contracts.
-- [ ] Please have final versions of contracts and documentation added/updated in this repo **no less than 48 business hours prior to audit start time.**
-- [ ] Be prepared for a 🚨code freeze🚨 for the duration of the audit — important because it establishes a level playing field. We want to ensure everyone's looking at the same code, no matter when they look during the audit. (Note: this includes your own repo, since a PR can leak alpha to our wardens!)
-
-## ⭐️ Sponsor: Repo checklist
-
-- [ ] Modify the [Overview](#overview) section of this `README.md` file. Describe how your code is supposed to work with links to any relevent documentation and any other criteria/details that the auditors should keep in mind when reviewing. (Here are two well-constructed examples: [Ajna Protocol](https://github.com/code-423n4/2023-05-ajna) and [Maia DAO Ecosystem](https://github.com/code-423n4/2023-05-maia))
-- [ ] Review the Gas award pool amount, if applicable. This can be adjusted up or down, based on your preference - just flag it for Code4rena staff so we can update the pool totals across all comms channels.
-- [ ] Optional: pre-record a high-level overview of your protocol (not just specific smart contract functions). This saves wardens a lot of time wading through documentation.
-- [ ] [This checklist in Notion](https://code4rena.notion.site/Key-info-for-Code4rena-sponsors-f60764c4c4574bbf8e7a6dbd72cc49b4#0cafa01e6201462e9f78677a39e09746) provides some best practices for Code4rena audit repos.
-
-## ⭐️ Sponsor: Final touches
-- [ ] Review and confirm the pull request created by the Scout (technical reviewer) who was assigned to your contest. *Note: any files not listed as "in scope" will be considered out of scope for the purposes of judging, even if the file will be part of the deployed contracts.*
-- [ ] Check that images and other files used in this README have been uploaded to the repo as a file and then linked in the README using absolute path (e.g. `https://github.com/code-423n4/yourrepo-url/filepath.png`)
-- [ ] Ensure that *all* links and image/file paths in this README use absolute paths, not relative paths
-- [ ] Check that all README information is in markdown format (HTML does not render on Code4rena.com)
-- [ ] Delete this checklist and all text above the line below when you're ready.
-
----
-
-
-# Wildcat audit details
+# Wildcat V2 Audit Details
 - Total Prize Pool: $100,000 in USDC
   - HM awards: $66,720 in USDC
   - Z Pool (Zenith side pool): $20,000 in USDC
@@ -58,11 +35,64 @@ Specific edge cases:
 - In the event that no LZRs rank in the top 5, the Dark Horse pool will be distributed, but only the top 5 ranked competitors will earn the Dark Horse achievement for the competition.
 - Any unused portion of the Z pool is returned to the Sponsor
 
+
+# Overview
+
+### The Pitch
+
+The Wildcat Protocol is an Ethereum protocol that addresses what we see as blockers in the sphere of on-chain fixed-rate private credit.
+
+If you're interested in the _how_ and _why_ at a high-level, the following will be of interest to you:
+
+- [Gitbook](https://docs.wildcat.finance)
+- [Launch Manifesto](https://medium.com/@wildcatprotocol/the-wildcat-manifesto-db23d4b9484d)
+- [Medium: Wildcat V2 - Wildcat But Better](https://medium.com/@wildcatprotocol/wildcat-v2-wildcat-but-better-156005da2c27)
+
+The Gitbook contains several high-level explanations of how users are expected to make use of the protocol, so reading it is heavily recommended.
+
+Wildcat's product is _markets_. They're credit escrow mechanisms where nearly every single parameter that you'd be interested in modifying can be modified at launch. Subsequent to launch, base APR and capacities can be adjusted by the borrower at will, with some caveats on reducing the former that effectively constitutes a ragequit option for lenders if they disagree with the change. Moreover, certain other parameters can be adjusted in V2 by way of constraining access through _pre-transaction hooks_: granting access to lenders based on certain providers, requiring minimum deposit amounts, restricting withdrawals for a certain period of time after market-launch, and so on.
+
+Wildcat inverts the typical on-chain credit model whereby borrowers appeal to an existing pool of lenders willing to loan their assets. Instead, a Wildcat borrower crafts their market/s the way that best suits them and would-be lenders engage thereafter.
+
+We handle collateralisation differently to most credit protocols. The borrower is not required to put any collateral down themselves when deploying a market, but rather there is a configurable percentage of the outstanding supply, the reserve ratio, that _must_ remain within the market. The borrower cannot utilise these assets, but they still accrue interest. This is intended as a liquid buffer for lenders to place withdrawal requests against, and the failure of the borrower to maintain this ratio (by repaying assets to the market when the ratio is breached) ultimately results in an additional penalty interest rate being applied. If you're wondering, 'wait, does that mean that lenders are collateralising their own loans?', the answer is _yes, they absolutely are_. Moreover, the reserve ratio in Wildcat V2 can be zero, enabling truly uncollateralised markets (modulo the presence of any protocol fees or withdrawal requests).
+
+The protocol itself is entirely hands-off when it comes to any given market. It has no ability to freeze or seize borrower collateral (since there isn't any), and it can't pause activity. As an ideological choice, Wildcat does not make use of proxies, and markets are therefore non-upgradable. If keys are lost or if anything else goes wrong in the contracts, the protocol cannot help, and this requires us to take security extremely seriously. It's why you're reading this right now.
+
+The protocol monitors for addresses that are flagged by the Chainalysis oracle as being placed on a sanctions list and bars them from interacting with markets. That's the extent of the guardrails.
+
+### A More Technical Briefing
+
+The Wildcat protocol itself coalesces around a single contract - the archcontroller. This contract determines which factories can be used, which markets have already been deployed and which addresses are permitted to deploy hook instances and market contracts from said factories.
+
+Borrowers deploy markets through the hook factory, either deploying a new hook instance parameterised the way they wish (cloning an authorised hooks template contract approved by the archcontroller owners) or referencing an existing hook instance. Lenders can obtain access by receiving a credential via an access control hook, which may have one or many providers (for more on this, see [here](https://docs.wildcat.finance/technical-overview/security-developer-dives/hooks/access-control-hooks)).
+
+Lenders can deposit assets to any markets they have a credential for so long as it has not expired, and lenders that have received a credential once are always capable of filing withdrawal requests. In exchange for their deposits, they receive a _market token_ which has been parameterised by the borrower: you might receive Code4rena Dai Stablecoin - ticker c4DAI - for depositing DAI into a market run by Code4rena. Or C4 Wrapped Ether (code423n4WETH).
+
+These market tokens are _rebasing_ so as to always be redeemable at parity for the underlying asset of a market (provided it has sufficient liquid reserves) - as time goes on, interest inflates the supply of market tokens to be consistent with the overall debt that is owed by the borrower. The interest rate compounds every time a non-static call is made to the market contract and the scale factor is updated.
+
+The interest rate paid by the borrower can comprise of up to three distinct figures:
+
+  - The base APR (accruing to the lender, expressed in bips when a market is deployed),
+  - The protocol fee APR (accruing to the Wildcat protocol itself, expressed as a percentage of the base APR), and
+  - The penalty APR (accruing to the lender, expressed in bips when a market is deployed).
+
+A borrower deploying a market with a base APR of 10%, a protocol APR of 5% and a penalty APR of 20% will pay a true APR of 10.5% (10% + (10% * 5%)) under normal circumstances, and 30.5% when the market has been delinquent for long enough for the penalty APR to activate.
+
+The penalty APR activates when the market has been delinquent (has insufficient reserves to meet its obligations) for a rolling period of time in excess of the _grace period_ - a value (in seconds) defined by the borrower on market deployment. Each market has an internal value called the _grace tracker_, which counts up from zero while a market is delinquent, and counts down to zero when it is not. When the grace tracker value exceeds the grace period, the penalty APR applies for as long as it takes for the former to drop back below the latter. This means that a borrower does _not_ have the amount of time indicated by the grace period to deposit assets back into the market every single time it goes delinquent: it is context dependent.
+
+Borrowers can withdraw underlying assets from the market only so far as the minimum number of required reserves is maintained.
+
+Withdrawals are initiated by any authorised address (that holds a non-zero amount of the appropriate market token) placing a withdrawal request. If there are any assets in reserve, market tokens will be burned 1:1 to move them into a 'claimable withdrawals pool', at which point the assets transferred will cease accruing interest. At the conclusion of a withdrawal cycle (a market parameter set at deployment), assets in the claimable withdrawals pool can be claimed by the lender, subject to pro-rata dispersal if the amount requested for withdrawal by all lenders exceeds the amount in the pool. 
+
+Withdrawal request amounts that could not be honoured in a given cycle because of insufficient reserves are batched together, marked as 'expired' and enter a FIFO withdrawal queue. Non-zero withdrawal queues impact the reserve ratio of a market: any assets subsequently deposited by the borrower will be immediately routed into the claimable withdrawals pool until there are sufficient assets to fully honour all expired withdrawals. Any amounts in the claimable withdrawals pool that lender/s did not burn market tokens for will need to have them burned before claiming from here. We track any discrepancies between how much was burned and how much should be claimable internally.
+
+This is getting long and rambling, so instead we'll direct you to the [Gitbook](https://docs.wildcat.finance) which is even more so, but at least lays out the expected behaviour in prose. Again, we *strongly* recommend that you read it. We'll have a freeze in place for the [Known Issues](https://docs.wildcat.finance/technical-overview/security-developer-dives/known-issues) page so that we can't juke wardens by adding things retroactively.
+
+Sorry for subjecting you to all of this. You can go look at the code now.
+
 ## Automated Findings / Publicly Known Issues
 
 The 4naly3er report can be found [here](https://github.com/code-423n4/2024-08-wildcat/blob/main/4naly3er-report.md).
-
-
 
 _Note for C4 wardens: Anything included in this `Automated Findings / Publicly Known Issues` section is considered a publicly known issue and is ineligible for awards._
 
@@ -70,14 +100,9 @@ _Note for C4 wardens: Anything included in this `Automated Findings / Publicly K
 
 - If you file a finding about the Sherlock `CREATE2` collision malarkey we will sell pinatas with your Discord handle on them as merchandise.
 
-
-# Overview
-
-[ ⭐️ SPONSORS: add info here ]
-
 ## Links
 
-- **Previous audits:**  [Previous review of V2 codebase](https://hackmd.io/@geistermeister/BJk4Ekt90)
+- **Previous Audits:**  [Previous Review of V2 Codebase](https://hackmd.io/@geistermeister/BJk4Ekt90)
 
 The fundamental core of the protocol (V1) has previously been audited by Code4rena:
 * https://code4rena.com/contests/2023-10-the-wildcat-protocol
@@ -86,8 +111,6 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 - **Documentation:** https://docs.wildcat.finance/
 - **Website:** https://wildcat.finance/
 - **X/Twitter:** [@WildcatFi](https://x.com/WildcatFi)
-- **Telegram:** https://t.me/+DcgjEiWaDpVkNTE8
-
 ---
 
 # Scope
@@ -230,7 +253,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 | Question                                | Answer                       |
 | --------------------------------------- | ---------------------------- |
 | ERC20 used by the protocol              |       Any non-rebasing ERC20 is valid. Creating markets for rebasing tokens breaks the underlying model.             |
-| Test coverage                           | Lines: 79.64% - Funcions: 84.05%                          |
+| Test coverage                           | Lines: 79.64% - Functions: 84.05%                          |
 | ERC721 used  by the protocol            |            None              |
 | ERC777 used by the protocol             |           None                |
 | ERC1155 used by the protocol            |              None             |
@@ -272,9 +295,9 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 N/A
 
 
-# Additional context
+# Additional Context
 
-## Main invariants
+## Main Invariants
 
 - Properties that should NEVER be broken under any circumstance:
 
@@ -326,7 +349,10 @@ N/A
 
 
 ## Attack ideas (where to focus for bugs)
-- Our largest areas of concern involve the interactions and exploits that can arise from the interaction between markets and their hooks. We are aware of some aspects of this already [see: https://docs.wildcat.finance/technical-overview/security-developer-dives/known-issues], but fundamentally if there is a way for a hook to revert in an unexpected way it can potentially brick access to the function that it gatekeeps.
+
+Our largest areas of concern involve the interactions and exploits that can arise from the interaction between markets and their hooks.
+
+We are aware of some aspects of this already [see: https://docs.wildcat.finance/technical-overview/security-developer-dives/known-issues], but fundamentally if there is a way for a hook to revert in an unexpected way it can potentially brick access to the function that it gatekeeps.
 
 - More generally, we have removed the controller role and moved all market constraining mechanisms into the hooks: this is a non-trivial change if you previously audited Wildcat V1.
 
@@ -344,21 +370,15 @@ N/A
 
 - Consider ways in which removing access (borrowers from the archcontroller, lender credentials from hook providers) can lead to the inability to interact correctly with markets.
 
-
-
 #### Market Parameters
 
 - Consider ways in which market interest rates can be manipulated to produce results that are outside of specified limits.
 
 - Consider ways in which the required reserves of a market can be manipulated so as to lead to the borrower borrowing more than they should be permitted.
 
-
-
 #### Penalty APR
 
 - Consider ways in which the borrower can manipulate reserves or base APRs in a way to avoid the penalty rate activating if delinquent for longer then the grace period (note: market termination is an exception here).
-
-
 
 #### Deposits and Withdrawals
 
@@ -374,17 +394,13 @@ N/A
 
 - Consider ways in which an address without the correct permissions can burn market tokens or otherwise make withdrawal requests.
 
-
-
 #### Sentinel and Escrow Contracts
 
 - Consider ways (beyond a hostile Chainalysis oracle) in which lender addresses could be excised from a market via nukeFromOrbit.
 
 - Consider ways in which parties to an escrow contract might be locked out of it, or the escrow contract might otherwise be bricked.
 
-
-
-## All trusted roles in the protocol
+## All Trusted Roles In The Protocol
 
 
 | Role                                | Description                       |
