@@ -260,7 +260,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 
 | Question                                | Answer                       |
 | --------------------------------------- | ---------------------------- |
-| ERC20 used by the protocol              |       Any non-rebasing ERC20 is valid. Creating markets for rebasing tokens breaks the underlying model.             |
+| ERC20 used by the protocol              | ERC-20s used as underlying assets for markets require no fee on transfer, `totalSupply` to be not at all close to 2^128, arbitrary mint/burn must not be possible, and `name`, `symbol` and `decimals` must all return valid results. Creating markets for rebasing tokens breaks the underlying interest rate model.      |
 | Test coverage                           | Lines: 79.64% - Functions: 84.05%                          |
 | ERC721 used  by the protocol            |            None              |
 | ERC777 used by the protocol             |           None                |
@@ -412,12 +412,13 @@ We are aware of some aspects of this already [see: https://docs.wildcat.finance/
 
 ## All Trusted Roles In The Protocol
 
+You should bear in mind that this is a pretty unusual set of contracts compared to your usual Solidity repo. There are a lot of trust assumptions baked in here given that underlying purpose of the protocol is undercollateralised credit, which necessarily reaches off-chain.
 
 | Role                                | Description                       |
 | --------------------------------------- | ---------------------------- |
-| Archcontroller Operator                          |  Dictates which addresses are allowed to deploy markets and hooks instances (i.e. act as borrowers).  Can deploy new market factories and hooks templates to extend protocol functionality, as well as adjusting fee parameters.               |
-| Borrowers                             |  Capable of deploying markets parameterised as they wish, and determine the conditions/policies under which an address can engage with the market as a lender. Has the ability to adjust APR, capacity and certain parameters of hooks (e.g. providers) once deployed. Can terminate/close markets at will.                         |
-| Lenders                             |  Authorised via a hook (either third-party KYC/KYB or explicit whitelisting) to deposit/withdraw from markets. Unauthorised addresses are unable to deposit in a way that triggers supply changes.                       |
+| Archcontroller Operator                          |  Dictates which addresses are allowed to deploy markets and hooks instances (i.e. act as borrowers).  Can deploy new market factories and hooks templates to extend protocol functionality, as well as adjusting fee parameters. Can blacklist ERC-20s to prevent future markets being created for them. Can remove borrowers from archcontroller (preventing them from future deployments), and can deregister hooks instances and factories.        |
+| Borrowers                             |  Capable of deploying hook instances markets parameterised as they wish, and determine the conditions/policies under which an address can engage with the market as a lender. Has the ability to adjust APR, capacity and certain parameters of hooks (e.g. providers) once deployed. Can terminate/close markets at will. _Fundamental_ assumption is that assets will be returned to markets to honour required reserves upon demand.                        |
+| Lenders                             |  Authorised via hooks to deposit/withdraw from markets. Unauthorised addresses are unable to deposit in a way that triggers supply changes.                       |
 
 ## Any novel or unique curve logic or mathematical models implemented in the contracts:
 
