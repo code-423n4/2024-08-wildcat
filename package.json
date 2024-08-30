@@ -1,0 +1,36 @@
+{
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.0.1",
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@typechain/ethers-v5": "^10.2.1",
+    "@typechain/hardhat": "^6.1.6",
+    "hardhat": "^2.13.0",
+    "open-cli": "^7.2.0",
+    "prettier": "^2.8.8",
+    "prettier-plugin-solidity": "^1.1.3",
+    "solhint": "^3.6.2",
+    "solhint-plugin-prettier": "^0.0.5",
+    "stack-packer": "^1.1.8",
+    "ts-node": "^10.9.1",
+    "typechain": "^8.1.1",
+    "typescript": "^4.9.5"
+  },
+  "scripts": {
+    "codegen": "stack-packer ./type-defs ./src/types -t ./contracts/test -h ./contracts/test",
+    "lint:check": "prettier --check 'src/**/*.sol' 'test/**/*.sol' && solhint --config ./.solhint.json --ignore-path ./.solhintignore 'src/**/*.sol' 'test/**/*.sol'",
+    "lint:fix": "prettier --write 'src/**/*.sol' 'test/**/*.sol' && solhint --config ./.solhint.json --ignore-path ./.solhintignore 'src/**/*.sol' 'test/**/*.sol'",
+    "clean:coverage": "rm -rf coverage lcov.info",
+    "coverage": "yarn clean:coverage && forge coverage --report summary --report lcov && lcov -o lcov.info --remove lcov.info --rc lcov_branch_coverage=1 --rc lcov_function_coverage=1 --rc lcov_line_coverage=1 'test/*' 'scripts/*' && genhtml lcov.info -o coverage --branch-coverage --function-coverage  && echo \"Coverage report written to ./coverage/index.html\" && open-cli ./coverage/index.html && rm lcov.info",
+    "test": "forge test --block-timestamp $(date +%s)",
+    "test:ir": "FOUNDRY_PROFILE=ir forge test --block-timestamp $(date +%s)",
+    "compile": "forge compile",
+    "compile:ir": "FOUNDRY_PROFILE=ir forge compile",
+    "compile:unoptimizedir": "FOUNDRY_PROFILE=unoptimizedir forge compile"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.3",
+    "@types/node": "^20.4.2",
+    "cli-barchart": "^0.2.3",
+    "ethers": "^6.6.3"
+  }
+}

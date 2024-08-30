@@ -1,0 +1,24 @@
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "lib/ds-test"]
+	path = lib/ds-test
+	url = https://github.com/dapphub/ds-test
+[submodule "lib/solmate"]
+	path = lib/solmate
+	url = https://github.com/transmissions11/solmate
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "lib/sol-utils"]
+	path = lib/sol-utils
+	url = https://github.com/d1ll0n/sol-utils
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/Vectorized/solady
+[submodule "lib/vulcan"]
+	path = lib/vulcan
+	url = https://github.com/nomoixyz/vulcan
+[submodule "lib/ethereum-access-token"]
+	path = lib/ethereum-access-token
+	url = https://github.com/wildcat-finance/ethereum-access-token

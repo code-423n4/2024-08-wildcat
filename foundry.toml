@@ -1,0 +1,63 @@
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ['lib']
+gas_reports = ["WildcatMarket"]
+
+ffi=true
+solc="0.8.25"
+fs_permissions = [
+  { access = "read-write", path = "./deployments/"},
+  { access = "read-write", path = "./out/"},
+  { access = "read-write", path = "./ir-out/"},
+  { access = "read-write", path = "./deployments-old.json"}
+]
+
+remappings = [
+  'forge-std/=lib/forge-std/src/',
+  'ds-test/=lib/ds-test/src/',
+  'solmate/=lib/solmate/src/',
+  'solady/=lib/solady/src/',
+  'sol-utils/=lib/sol-utils/src/',
+  'openzeppelin/=lib/openzeppelin-contracts/',
+  'ethereum-access-token/=lib/ethereum-access-token/contracts/'
+]
+
+evm_version = 'cancun'
+
+ignored_warnings_from = ["src/", "test/"]
+bytecode_hash = 'none'
+
+[profile.coverage]
+fuzz_runs = 10000
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
+
+[profile.ir]
+via_ir=true
+out='ir-out'
+cache_path='ir-cache'
+optimizer_runs=4_294_967_295
+optimizer=true
+extra_output_files=["irOptimized", "ir"]
+bytecode_hash = 'none'
+
+[profile.unoptimizedir]
+via_ir=true
+out='unoptimized-ir-out'
+cache_path='unoptimized-ir-cache'
+optimizer=false
+extra_output_files=["irOptimized", "ir"]
+
+
+[profile.default.fuzz]
+runs = 1000
+
+[invariant]
+runs = 2000
+depth = 30
+fail_on_revert = false
+call_override = false
+dictionary_weight = 80
+include_storage = true
+include_push_bytes = true

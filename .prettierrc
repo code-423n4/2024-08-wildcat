@@ -1,0 +1,17 @@
+{
+  "plugins": [
+    "./node_modules/prettier-plugin-solidity"
+  ],
+  "overrides": [
+    {
+      "files": "*.sol",
+      "options": {
+        "singleQuote": true,
+        "printWidth": 100,
+        "tabWidth": 2,
+        "useTabs": false,
+        "bracketSpacing": true
+      }
+    }
+  ]
+}

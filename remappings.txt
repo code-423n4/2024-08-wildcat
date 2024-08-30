@@ -1,0 +1,8 @@
+src/=src/
+forge-std/=lib/forge-std/src/
+ds-test/=lib/ds-test/src/
+solmate/=lib/solmate/src/
+solady/=lib/solady/src/
+openzeppelin/=lib/openzeppelin-contracts/
+sol-utils/=lib/sol-utils/src/
+ethereum-access-token/=lib/ethereum-access-token/contracts/
