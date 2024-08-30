@@ -52,7 +52,9 @@ If you're interested in the _how_ and _why_ at a high-level, the following will 
 
 The Gitbook contains several high-level explanations of how users are expected to make use of the protocol, so reading it is heavily recommended.
 
-Wildcat's product is _markets_. They're credit escrow mechanisms where nearly every single parameter that you'd be interested in modifying can be modified at launch. Subsequent to launch, base APR and capacities can be adjusted by the borrower at will, with some caveats on reducing the former that effectively constitutes a ragequit option for lenders if they disagree with the change. Moreover, certain other parameters can be adjusted in V2 by way of constraining access through _pre-transaction hooks_: granting access to lenders based on certain providers, requiring minimum deposit amounts, restricting withdrawals for a certain period of time after market-launch, and so on.
+Wildcat's product is _markets_. They're credit escrow mechanisms where nearly every single parameter that you'd be interested in modifying can be modified at launch.
+
+Moreover, certain other parameters (access control for lender self-onboarding, minimum deposit amounts, fixed duration markets etc) can be adjusted in V2 by way of constraining access through _pre-transaction hooks. Some hooks - such as those relating to access control - permit borrowers to add or remove provider contracts after deployment in order to fine-tune ways for lenders to obtain access-granting credentials.
 
 Wildcat inverts the typical on-chain credit model whereby borrowers appeal to an existing pool of lenders willing to loan their assets. Instead, a Wildcat borrower crafts their market/s the way that best suits them and would-be lenders engage thereafter.
 
@@ -60,13 +62,13 @@ We handle collateralisation differently to most credit protocols. The borrower i
 
 The protocol itself is entirely hands-off when it comes to any given market. It has no ability to freeze or seize borrower collateral (since there isn't any), and it can't pause activity. As an ideological choice, Wildcat does not make use of proxies, and markets are therefore non-upgradable. If keys are lost or if anything else goes wrong in the contracts, the protocol cannot help, and this requires us to take security extremely seriously. It's why you're reading this right now.
 
-The protocol monitors for addresses that are flagged by the Chainalysis oracle as being placed on a sanctions list and bars them from interacting with markets. That's the extent of the guardrails.
+The protocol monitors for addresses that are flagged by the Chainalysis oracle as being placed on a sanctions list and bars them from interacting with markets.
 
 ### A More Technical Briefing
 
-The Wildcat protocol itself coalesces around a single contract - the archcontroller. This contract determines which factories can be used, which markets have already been deployed and which addresses are permitted to deploy hook instances and market contracts from said factories.
+The Wildcat protocol itself coalesces around a single contract - the [archcontroller](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/WildcatArchController.sol). This contract determines which factories can be used, which markets have already been deployed and which addresses are permitted to deploy hook instances and market contracts from said factories.
 
-Borrowers deploy markets through the hook factory, either deploying a new hook instance parameterised the way they wish (cloning an authorised hooks template contract approved by the archcontroller owners) or referencing an existing hook instance. Lenders can obtain access by receiving a credential via an access control hook, which may have one or many providers (for more on this, see [here](https://docs.wildcat.finance/technical-overview/security-developer-dives/hooks/access-control-hooks)).
+Borrowers deploy V2 markets through the [hooks factory](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol), either deploying a new hook instance parameterised the way they wish (cloning an authorised hooks template contract approved by the archcontroller owners) or referencing an existing hook instance. Lenders can obtain access by receiving a credential via an access control hook, which may have one or many providers (for more on this, see [here](https://docs.wildcat.finance/technical-overview/security-developer-dives/hooks/access-control-hooks)).
 
 Lenders can deposit assets to any markets they have a credential for so long as it has not expired, and lenders that have received a credential once are always capable of filing withdrawal requests. In exchange for their deposits, they receive a _market token_ which has been parameterised by the borrower: you might receive Code4rena Dai Stablecoin - ticker c4DAI - for depositing DAI into a market run by Code4rena. Or C4 Wrapped Ether (code423n4WETH).
 
@@ -78,11 +80,13 @@ The interest rate paid by the borrower can comprise of up to three distinct figu
   - The protocol fee APR (accruing to the Wildcat protocol itself, expressed as a percentage of the base APR), and
   - The penalty APR (accruing to the lender, expressed in bips when a market is deployed).
 
-A borrower deploying a market with a base APR of 10%, a protocol APR of 5% and a penalty APR of 20% will pay a true APR of 10.5% (10% + (10% * 5%)) under normal circumstances, and 30.5% when the market has been delinquent for long enough for the penalty APR to activate.
+A borrower deploying a market with a base APR of 10%, a protocol APR of 5% and a penalty APR of 20% will pay a true APR of 10.5% (10% + (10% * 5%)) under normal circumstances, and 30.5% when the market has been delinquent for long enough for the penalty APR to activate. The protocol APR percentage doesn't factor in penalty APRs even while they're active.
 
-The penalty APR activates when the market has been delinquent (has insufficient reserves to meet its obligations) for a rolling period of time in excess of the _grace period_ - a value (in seconds) defined by the borrower on market deployment. Each market has an internal value called the _grace tracker_, which counts up from zero while a market is delinquent, and counts down to zero when it is not. When the grace tracker value exceeds the grace period, the penalty APR applies for as long as it takes for the former to drop back below the latter. This means that a borrower does _not_ have the amount of time indicated by the grace period to deposit assets back into the market every single time it goes delinquent: it is context dependent.
+The penalty APR is activated by udpating the state of the market when the market has been delinquent (has insufficient reserves to meet its obligations) for a rolling period of time in excess of the _grace period_ - a value (in seconds) defined by the borrower on market deployment. Each market has an internal value called the _grace tracker_, which counts up from zero while a market is delinquent, and counts down to zero when it is not. When the grace tracker value exceeds the grace period, the penalty APR applies for as long as it takes for the former to drop back below the latter and the state to be updated again. This means that a borrower does _not_ have the amount of time indicated by the grace period to deposit assets back into the market every single time it goes delinquent: it is context dependent.
 
 Borrowers can withdraw underlying assets from the market only so far as the minimum number of required reserves is maintained.
+
+Subsequent to launch, base APR, capacities can be adjusted by the borrower at will, with some caveats on reducing the former that effectively constitutes a ragequit option for lenders if they disagree with the change. Base APRs (that which accrues to lenders) can be adjusted after market deployment, but there are constraints in place: borrowers must return a non-trivial amount of the outstanding supply to the market as required reserves if the APR is reduced by more than 25% in a two week period, and capacity can only be reduced to a maximum of the current outstanding supply.
 
 Withdrawals are initiated by any authorised address (that holds a non-zero amount of the appropriate market token) placing a withdrawal request. If there are any assets in reserve, market tokens will be burned 1:1 to move them into a 'claimable withdrawals pool', at which point the assets transferred will cease accruing interest. At the conclusion of a withdrawal cycle (a market parameter set at deployment), assets in the claimable withdrawals pool can be claimed by the lender, subject to pro-rata dispersal if the amount requested for withdrawal by all lenders exceeds the amount in the pool. 
 
