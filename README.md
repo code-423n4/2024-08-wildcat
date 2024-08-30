@@ -2,6 +2,8 @@
 
 Mr Anderson, welcome back. We missed you.
 
+[![The Wildcat Protocol](https://github.com/code-423n4/2024-08-wildcat/blob/overview-edits/images/wildcat_logo.png?raw=true)](https://github.com/code-423n4/2024-08-wildcat)
+
 # Wildcat V2 Audit Details
 - Total Prize Pool: $100,000 in USDC
   - HM awards: $66,720 in USDC
@@ -104,6 +106,8 @@ _Note for C4 wardens: Anything included in this `Automated Findings / Publicly K
 
 - **Previous Audits:**  [Previous Review of V2 Codebase](https://hackmd.io/@geistermeister/BJk4Ekt90)
 
+[![The Wildcat Protocol](https://github.com/code-423n4/2024-08-wildcat/blob/overview-edits/images/wildcat_firsttime.jpeg?raw=true)](https://github.com/code-423n4/2024-08-wildcat)
+
 The fundamental core of the protocol (V1) has previously been audited by Code4rena:
 * https://code4rena.com/contests/2023-10-the-wildcat-protocol
 * https://hackmd.io/@geistermeister/r15gj_y1p
@@ -117,7 +121,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 
 *See [scope.txt](https://github.com/code-423n4/2024-08-wildcat/blob/main/scope.txt)*
 
-### Files in scope
+### Files In Scope
 
 
 | File   | Logic Contracts | Interfaces | nSLOC | Purpose | Libraries used |
@@ -144,7 +148,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 | **Totals** | **19** | **** | **3784** | | |
 
 
-### Files out of scope
+### Files Out Of Scope
 
 *See [out_of_scope.txt](https://github.com/code-423n4/2024-08-wildcat/blob/main/out_of_scope.txt)*
 
@@ -247,7 +251,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 
 ## Scoping Q &amp; A
 
-### General questions
+### General Questions
 
 
 | Question                                | Answer                       |
@@ -259,7 +263,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 | ERC1155 used by the protocol            |              None             |
 | Chains the protocol will be deployed on | Ethereum, Base, Arbitrum, Polygon |
 
-### ERC20 token behaviors in scope
+### ERC20 Token Behaviors In Scope
 
 | Question                                                                                                                                                   | Answer |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
@@ -281,7 +285,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 | [High decimals ( > 18)](https://github.com/d-xo/weird-erc20?tab=readme-ov-file#high-decimals)                                                              | Out of scope    |
 | [Blocklists](https://github.com/d-xo/weird-erc20?tab=readme-ov-file#tokens-with-blocklists)                                                                | In scope    |
 
-### External integrations (e.g., Uniswap) behavior in scope:
+### External Integrations (e.g., Uniswap) Behavior In Scope:
 
 
 | Question                                                  | Answer |
@@ -291,7 +295,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 | Upgradeability (e.g. Uniswap gets upgraded)               |   No  |
 
 
-### EIP compliance 
+### EIP Compliance 
 N/A
 
 
@@ -348,7 +352,9 @@ N/A
 
 
 
-## Attack ideas (where to focus for bugs)
+## Attack Ideas (Where To Focus For Bugs)
+
+[![The Wildcat Protocol](https://github.com/code-423n4/2024-08-wildcat/blob/overview-edits/images/wildcat_nolows.png?raw=true)](https://github.com/code-423n4/2024-08-wildcat)
 
 Our largest areas of concern involve the interactions and exploits that can arise from the interaction between markets and their hooks.
 
@@ -364,11 +370,11 @@ We are aware of some aspects of this already [see: https://docs.wildcat.finance/
 
 - Consider ways in which borrower addresses, hooks templates or markets can be added to the archcontroller either without the specific approval of its owner or as a result of contract deployment.
 
-- Consider ways in which lenders can be authorised for a market without passing through (in good faith) the process specified by the borrower that deployed it.
+- Consider ways in which lenders can receive a credential for a market without 'correctly' passing through the hook instance specified by the borrower that deployed it.
 
 - Consider ways in which access to market interactions can be maliciously altered to either block or elevate parties outside of the defined flow.
 
-- Consider ways in which removing access (borrowers from the archcontroller, lender credentials from hook providers) can lead to the inability to interact correctly with markets.
+- Consider ways in which removing access (borrowers from the archcontroller, borrowers playing with hooks) can lead to the inability to interact correctly with markets.
 
 #### Market Parameters
 
@@ -415,7 +421,7 @@ N/A
 
 
 
-## Running tests
+## Running Tests
 
 
 ```bash
