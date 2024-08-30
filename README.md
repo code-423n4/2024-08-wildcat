@@ -56,7 +56,7 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 # Wildcat audit details
 - Total Prize Pool: $100,000 in USDC
   - HM awards: $66,720 in USDC
-  - Zenith Side Pool $20,000 in USDC
+  - Z Pool (Zenith side pool): $20,000 in USDC
   - QA awards: $2,780 in USDC
   - Judge awards: $6,000 in USDC
   - Validator awards: 4,000 USDC 
