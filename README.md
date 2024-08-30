@@ -365,12 +365,6 @@ make gas
 ✅ SCOUTS: Add a screenshot of your terminal showing the gas report
 ✅ SCOUTS: Add a screenshot of your terminal showing the test coverage
 
-## Miscellaneous
-Employees of [SPONSOR NAME] and employees' family members are ineligible to participate in this audit.
-
-Code4rena's rules cannot be overridden by the contents of this README. In case of doubt, please check with C4 staff.
-
-
 
 # Scope
 
@@ -503,3 +497,7 @@ Code4rena's rules cannot be overridden by the contents of this README. In case o
 | ./test/types/TransientBytesArray.t.sol |
 | Totals: 93 |
 
+## Miscellaneous
+Employees of The Wildcat Protocol and employees' family members are ineligible to participate in this audit.
+
+Code4rena's rules cannot be overridden by the contents of this README. In case of doubt, please check with C4 staff.
