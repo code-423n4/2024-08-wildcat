@@ -208,8 +208,8 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 
 | Question                                | Answer                       |
 | --------------------------------------- | ---------------------------- |
-| ERC20 used by the protocol              |       Any non-rebasing ERC20 is valid. Creating markets for rebasing tokens break the underlying model.             |
-| Test coverage                           | Lines: 79.64% - Funcions: 84.05 %                          |
+| ERC20 used by the protocol              |       Any non-rebasing ERC20 is valid. Creating markets for rebasing tokens breaks the underlying model.             |
+| Test coverage                           | Lines: 79.64% - Funcions: 84.05%                          |
 | ERC721 used  by the protocol            |            None              |
 | ERC777 used by the protocol             |           None                |
 | ERC1155 used by the protocol            |              None             |
