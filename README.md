@@ -106,7 +106,7 @@ _Note for C4 wardens: Anything included in this `Automated Findings / Publicly K
 
 - If you file a finding about the Sherlock `CREATE2` collision malarkey we will sell piñatas with your Discord handle on them as merch.
 
-- We are on our hands and knees asking you to read [this](https://github.com/code-423n4/2024-08-wildcat/blob/main/docs/Scale%20Factor.md) before you file a finding about the scale factor.
+- We are on our hands and knees begging you to read [this](https://github.com/code-423n4/2024-08-wildcat/blob/main/docs/Scale%20Factor.md) before you file a finding about the scale factor.
   - If you file one anyway, we will pay [Shizzy](https://x.com/ShizzyAizawa) to turn you into a wojak for our Telegram sticker pack. Trust us, this isn't a reward.
 
 ## Links
