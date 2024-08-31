@@ -1,20 +1,6 @@
 # How hooks work
 
-Each of the following is considered a core function on the WildcatMarket contract which we may want a hooks contract to be able to track, impose restrictions on, or otherwise react to in some way:
-
-- `deposit` (+ `depositUpTo`)
-- `queueWithdrawal` (+ `queueFullWithdrawal`)
-- `executeWithdrawal` (+ `executeWithdrawals`)
-- `transfer` (+ `transferFrom`)
-- `borrow`
-- `repay` (+ `repayOutstandingDebt`, `repayDelinquentDebt`)
-- `closeMarket`
-- `setMaxTotalSupply`
-- `nukeFromOrbit`
-- `setAnnualInterestAndReserveRatioBips`
-- `setProtocolFeeBips`
-
-Each of these functions has a corresponding hook that can be called on the configured hooks contract, as well as a flag in the market's hooks configuration (`HooksConfig`) indicating whether the hook _should_ be called.
+For each market function which we may want a hooks contract to be able to track, impose restrictions on, or otherwise react to in some way, there is a corresponding hook that can be called on the configured hooks contract as well as a flag in the market's hooks configuration (`HooksConfig`) indicating whether the hook _should_ be called.
 
 When one of these functions on a market is called, the market will check if the corresponding hook is enabled; if it is, it will call the hook function on the configured hooks contract, providing the intermediate state (prior to applying the full effects of the relevant action, but after accruing interest and fees), the relevant data for the action, the caller address (except for borrower-only functions) and an optional `extraData` buffer supplied by the caller.
 
@@ -22,9 +8,11 @@ Hooks can not modify internal behavior of the market and do not have any privile
 
 **Exceptions to the above**
 
-There are two exceptions to the behavior described above.
+There are three exceptions to the behavior described above.
 
 The rule about not modifying the market behavior is violated by `setAnnualInterestAndReserveRatioBips` - when a market's APR or reserve ratio are changed, the associated hook has the ability to modify those two values.
+
+The rule about not modifying the market behavior is also violated by `onCreateMarket` which can modify the `HooksConfig` given by the borrower when a market is being deployed.
 
 The rule about only providing intermediate state (i.e. before execution of the action) is violated by the `queueWithdrawal` functions - when a withdrawal is queued, the intermediate state provided to the hooks call is the state _after_ the market's `pendingWithdrawalExpiry` is updated. This ensures the hook has access to the withdrawal expiry if that is ever needed.
 
@@ -35,3 +23,30 @@ In a call to one of the core functions listed above, the caller can append arbit
 The `extraData` field is not part of the market's function signatures; the raw bytes must be appended to the end without ABI offset or length fields, and without padding to the closest word (otherwise the calculated length will be incorrect).
 
 For calls to `executeWithdrawals` and `nukeFromOrbit`, the optional buffer can not be provided.
+
+## Market Functions / Hooks Table
+
+|Contract | Market Function(s) | Hook Function(s) Triggered |
+|----------------|--------------------|---------------|
+| HooksFactory | `deployMarket` | `onCreateMarket` |
+| HooksFactory | `deployMarketAndHooks` | `onCreateMarket` |
+| WildcatMarket | `deposit` | `onDeposit` |
+| WildcatMarket | `depositUpTo` | `onDeposit` |
+| WildcatMarket | `queueWithdrawal`|  `onQueueWithdrawal` |
+| WildcatMarket | `queueFullWithdrawal` | `onQueueWithdrawal` |
+| WildcatMarket | `executeWithdrawal` | `onExecuteWithdrawal` |
+| WildcatMarket | `executeWithdrawals` | `onExecuteWithdrawal` |
+| WildcatMarket | `transfer` | `onTransfer` |
+| WildcatMarket | `transferFrom` | `onTransfer` |
+| WildcatMarket | `borrow` | `onBorrow` |
+| WildcatMarket | `repay`  | `onRepay` |
+| WildcatMarket | `repayOutstandingDebt` | `onRepay` |
+| WildcatMarket | `repayDelinquentDebt` | `onRepay` |
+| WildcatMarket | `repayAndProcessUnpaidWithdrawalBatches` | `onRepay`* |
+| WildcatMarket | `closeMarket` | `onRepay`*, `onCloseMarket` |
+| WildcatMarket | `setMaxTotalSupply` | `onSetMaxTotalSupply` |
+| WildcatMarket | `nukeFromOrbit` | `onQueueWithdrawal`*, `onNukeFromOrbit` |
+| WildcatMarket | `setAnnualInterestAndReserveRatioBips` | `onSetAnnualInterestAndReserveRatioBips` |
+| WildcatMarket | `setProtocolFeeBips` | `onSetProtocolFeeBips`  |
+
+> \* indicates that hook invocation is not guaranteed
