@@ -322,14 +322,16 @@ Properties that should NEVER be broken under any circumstance:
 
 - The market parameters should never be able to exit the bounds defined in `MarketConstraintHooks`.
 
+- Accounts which are blocked from deposits, or which do not have a credential on markets which require it for deposits, should never be able to mint market tokens.
+
+- Accounts which are flagged as sanctioned on Chainalysis should never be able to successfully modify the state of the market unless the borrower specifically overrides their sanctioned status in the sentinel (other than token approvals, or through their tokens being withdrawn & escrowed in nukeFromOrbit and executeWithdrawal).
+
 **All Markets**
 
 - Underlying assets held by a market can only be transferred out through borrows, withdrawal execution or collection of protocol fees.
   - Does not apply to other assets, which can be recovered by the borrower.
 
 - Underlying assets transferred to a market outside of a deposit are treated as a payment by the borrower, i.e. they do not mint new market tokens or otherwise affect internal accounting other than by increasing `totalAssets`.
-
-- Addresses without [REDACTED: Pending Dillon] should never be able to adjust market token supply.
 
 - A deposit should never be able to cause a market's total supply to exceed its `maxTotalSupply` in the same transaction.
   - It can exceed it in the next block after interest is accrued.
@@ -362,8 +364,6 @@ Our largest areas of concern involve the interactions and exploits that can aris
 We are aware of some aspects of this already [see: https://docs.wildcat.finance/technical-overview/security-developer-dives/known-issues], but fundamentally if there is a way for a hook to revert in an unexpected way it can potentially brick access to the function that it gatekeeps.
 
 - More generally, we have removed the controller role and moved all market constraining mechanisms into the hooks: this is a non-trivial change if you previously audited Wildcat V1.
-
-[PENDING: Dillon, anything else either hooks related or below that needs adjusting to reflect codebase changes?]
 
 - Beyond these, the areas of concern remain the same as they were for Wildcat V1 (as there's always a non-zero chance something was missed last time!):
 
