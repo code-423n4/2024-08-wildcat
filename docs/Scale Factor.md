@@ -5,16 +5,17 @@
 This page is fairly long as we get a lot of questions about the scaling mechanics and wanted to be thorough, but here's the condensed version:
 
 - Wildcat markets have _scaled token amounts_ and _market token amounts_, where scaled tokens represent shares in the market that only change upon deposit or withdrawal, and market tokens represent debt owed by the borrower in units of the base asset.
-- The _scale factor_ is the ratio between scaled and market token amounts. 1 wTKN is worth `1 * scaleFactor` TKN
+- The _scale factor_ is the ratio between scaled and market token amounts.
+   - For market WTKN with underlying asset TKN, 1 scaledWTKN is worth `1 * scaleFactor` WTKN, and 1 WTKN is worth 1 TKN in debt from the borrower.
 - The scale factor constantly grows with interest, causing the market token to rebase as debt accrues.
 - All the standard market functions (`balanceOf`, `totalSupply`, `transfer`, `deposit`, `withdraw`, etc.) use _market token amounts_.
 - The scaled query functions (`scaledBalanceOf`, `scaledTotalSupply`) return _scaled token amounts_, equivalent to market shares.
 
 ### Relevant Code
 
-In the codebase, the scale factor is stored as a ray value, meaning it has a base unit of 1e27, so 1.1e27 is 1.1.
+In the codebase, the scale factor is stored as a ray value, meaning it has a base unit of 1e27, so 1.1e27 is 1.1. A scale factor of 1.1 in a market would mean one token deposited when the market was first created is now worth 1.1 tokens due to interest.
 
-The [MathUtils](../../src/libraries/MathUtils.sol) library contains the math functions for dividing / multiplying ray values.
+The [MathUtils](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/libraries/MathUtils.sol) library contains the math functions for dividing / multiplying ray values.
 
 ## Scaled Tokens
 
@@ -99,7 +100,7 @@ Just to reiterate the terminology here:
 
    $T_2$
 
-   - scaleFactor = previousScaleFactor _ (1 + APR _ timeElapsed / oneYear) = 1.05
+   - scaleFactor = previousScaleFactor \* (1 + APR \* timeElapsed / oneYear) = 1.05
    - scaledBalanceOf(bob) = 100
    - balanceOf(bob) = scaledBalanceOf(bob) \* scaleFactor = 105
    - scaledTotalSupply = 100
@@ -121,7 +122,7 @@ Just to reiterate the terminology here:
 
    $T_4$
 
-   - scaleFactor = previousScaleFactor _ (1 + APR _ timeElapsed / oneYear) = 1.1025
+   - scaleFactor = previousScaleFactor \* (1 + APR \* timeElapsed / oneYear) = 1.1025
    - scaledBalanceOf(bob) = 100
    - balanceOf(bob) = scaledBalanceOf(bob) \* scaleFactor = 110.25
    - scaledBalanceOf(alice) = 200

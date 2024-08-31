@@ -24,9 +24,15 @@ Approved templates will be deployed as stored initcode (constructor code with a 
 
 Hooks contracts can be deployed by borrowers registered on the arch controller. Borrowers can choose to deploy a new hooks instance for each market (which they might want to do if the markets need different requirements for access, or they want to use a different hooks template), or to re-use the same hooks instance for several markets (if they want the same kind of market and the hooks instance supports use with multiple markets).
 
-Each hooks instance defines a set of optional hooks and a set of required hooks. When deploying a market, the borrower specifies which hooks the market should utilize, and the market will use the hooks which are marked as required by the hooks instance or marked optional and selected by the borrower.
+Each hooks instance defines a set of optional hooks and a set of required hooks. When deploying a market, the borrower specifies their preferences for which hooks the market should utilize and the hooks instance decides on the final configuration telling the market which hooks it should actually invoke.
 
 Once a market is deployed, its hooks instance can not be edited, nor can the set of hooks it uses.
+
+## `HooksConfig`
+
+Code: [src/types/HooksConfig.sol](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/types/HooksConfig.sol)
+
+The `HooksConfig` structure is the hooks configuration for a market. It defines the address of the market's hooks instance and tells the market which hooks should be invoked. The data type is defined alongside a library which actually executes the calls to the hooks instance.
 
 [HooksConfig](Hooks%20150b66c642c643f3927a464a9fe6b5d7/HooksConfig%205ebe318281ac4266bacb611b8656c2a8.md)
 

@@ -28,7 +28,7 @@ The name/symbol queries now support arbitrary length strings; once combined with
 
 **Withdrawal batch rounding**
 
-Normalized values for withdrawal batch payments are now rounded down rather than up to prevent a bug where closed markets could have their last withdrawal batch become uncloseable due to underpayment by a few wei.
+Normalized values for withdrawal batch payments are now rounded down rather than up to prevent a bug where closed markets could have their last withdrawal batch become unclosable due to underpayment by a few wei.
 
 **Token rescue function**
 
