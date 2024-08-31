@@ -68,7 +68,7 @@ The protocol monitors for addresses that are flagged by the Chainalysis oracle a
 
 The Wildcat protocol itself coalesces around a single contract - the [archcontroller](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/WildcatArchController.sol). This contract determines which factories can be used, which markets have already been deployed and which addresses are permitted to deploy hook instances and market contracts from said factories.
 
-Borrowers deploy V2 markets through the [hooks factory](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol), either deploying a new hook instance parameterised the way they wish (cloning an authorised hooks template contract approved by the archcontroller owners) or referencing an existing hook instance. Lenders can obtain access by receiving a credential via an access control hook, which may have one or many providers (for more on this, see [here](https://docs.wildcat.finance/technical-overview/security-developer-dives/hooks/access-control-hooks)).
+Borrowers deploy V2 markets through the [hooks factory](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol), either deploying a new hook instance parameterised the way they wish (cloning an authorised hooks template contract approved by the archcontroller owners) or referencing an existing hook instance. Lenders can obtain access by receiving a credential via an access control hook, which may have one or many providers (for more on this, see [here](https://github.com/code-423n4/2024-08-wildcat/blob/main/docs/hooks/templates/Access%20Control%20Hooks.md)).
 
 Lenders can deposit assets to any markets they have a credential for so long as it has not expired, and lenders that have deposited or received market tokens while having a valid credential are always capable of filing withdrawal requests. In exchange for their deposits, they receive a _market token_ which has been parameterised by the borrower: you might receive Code4rena Dai Stablecoin - ticker c4DAI - for depositing DAI into a market run by Code4rena. Or C4 Wrapped Ether (code423n4WETH).
 
@@ -77,7 +77,7 @@ These market tokens are _rebasing_ so as to always be redeemable at parity for t
 The interest rate paid by the borrower can comprise of up to three distinct figures:
 
   - The base APR (accruing to the lender, expressed in bips when a market is deployed),
-  - The protocol fee APR (accruing to the Wildcat protocol itself, expressed as a percentage of the base APR), and
+  - The protocol fee APR (accruing to the Wildcat protocol itself, expressed in bips as a fraction of the base APR), and
   - The penalty APR (accruing to the lender, expressed in bips when a market is deployed).
 
 A borrower deploying a market with a base APR of 10%, a protocol APR of 5% and a penalty APR of 20% will pay a true APR of 10.5% (10% + (10% * 5%)) under normal circumstances, and 30.5% when the market has been delinquent for long enough for the penalty APR to activate. The protocol APR percentage doesn't factor in penalty APRs even while they're active.
@@ -369,8 +369,6 @@ We are aware of some aspects of this already [see: https://docs.wildcat.finance/
 
 #### Access Controls and Permissions
 
-- Consider ways in which borrower addresses, hooks templates or markets can be added to the archcontroller either without the specific approval of its owner or as a result of contract deployment.
-
 - Consider ways in which lenders can receive a credential for a market without 'correctly' passing through the hook instance specified by the borrower that deployed it.
 
 - Consider ways in which access to market interactions can be maliciously altered to either block or elevate parties outside of the defined flow.
@@ -414,7 +412,7 @@ You should bear in mind that this is a pretty unusual set of contracts compared 
 | Role                                | Description                       |
 | --------------------------------------- | ---------------------------- |
 | Archcontroller Operator                          |  Dictates which addresses are allowed to deploy markets and hooks instances (i.e. act as borrowers).  Can deploy new market factories and hooks templates to extend protocol functionality, as well as adjusting fee parameters. Can blacklist ERC-20s to prevent future markets being created for them. Can remove borrowers from archcontroller (preventing them from future deployments), and can deregister hooks instances and factories to prevent the deployment of any further markets. Can effectively pause the entire protocol by updating the associated SphereX transaction monitoring engine to one that rejects all transactions. Cannot manipulate, update or intervene in extant markets beyond aforementioned SphereX pause power.     |
-| Borrowers                             |  Capable of deploying hook instances markets parameterised as they wish, and determine the conditions/policies under which an address can engage with the market as a lender. Has the ability to adjust APR, capacity and certain parameters of hooks (e.g. providers) once deployed. Can terminate/close markets at will. _Fundamental_ assumption is that assets will be returned to markets to honour required reserves upon demand.                        |
+| Borrowers                             |  Capable of deploying hook instances and markets parameterised as they wish, and determine the conditions/policies under which an address can engage with the market as a lender. Has the ability to adjust APR, capacity and certain parameters of hooks (e.g. providers) once deployed. Can terminate/close markets at will. _Fundamental_ assumption is that assets will be returned to markets to honour required reserves upon demand.                        |
 | Lenders                             |  Authorised via hooks to deposit/withdraw from markets. Unauthorised addresses are unable to deposit in a way that triggers supply changes.                       |
 
 ## Any novel or unique curve logic or mathematical models implemented in the contracts:

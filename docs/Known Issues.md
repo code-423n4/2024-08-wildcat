@@ -8,6 +8,8 @@ This one is fairly obvious but worth stating - if a borrower fails to repay thei
 
 If the borrower is malicious, they can hurt lenders in a variety of ways, including but not limited to: not repaying debt; adding themselves as a lender in order to withdraw beyond the borrow limit on a market they intend to default on; slowly reducing the APR by 25% every two weeks to avoid the penalty of an increased reserve ratio, and several other things.
 
+While the example of not repaying the loan would not be considered a valid finding, we do still encourage reports regarding any non-obvious ways a borrower could disadvantage lenders, particularly if they could do so in a way that did not leave evidence of them transparently violating their basic obligations to the lenders.
+
 **Newer withdrawals lose some of their accrued interest to previous withdrawals in the same batch**
 
 This one is intentional but may initially seem erroneous. If Alice creates a withdrawal batch with a request to withdraw 100 tokens while the scale factor is 1, and then bob later requests a withdrawal of 200 tokens when the scale factor is 2 and they are in the same batch, Alice and Bob will both receive 150 underlying tokens because they will each be credited for 100 scaled tokens given to the batch. This is very much the desired behavior, as it prevents earlier lenders from being penalized for creating a batch (which benefits the other lenders). All interest earned on scaled tokens entered into a batch is distributed evenly to the lenders in the batch, as if they had all created their withdrawal requests at the same time.
