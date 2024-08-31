@@ -36,6 +36,6 @@ The `HooksConfig` structure is the hooks configuration for a market. It defines 
 
 ## `Factory`
 
-Code: [src/types/HooksConfig.sol](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol)
+Code: [src/HooksFactory.sol](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol)
 
 [How Hooks Work](./How%20Hooks%20Work.md)
