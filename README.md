@@ -54,7 +54,7 @@ The Gitbook contains several high-level explanations of how users are expected t
 
 Wildcat's product is _markets_. They're credit escrow mechanisms where nearly every single parameter that you'd be interested in modifying can be modified at launch.
 
-Moreover, certain other parameters (access control for lender self-onboarding, minimum deposit amounts, fixed duration markets etc) can be adjusted in V2 by way of constraining access through _pre-transaction hooks. Some hooks - such as those relating to access control - permit borrowers to add or remove provider contracts after deployment in order to fine-tune ways for lenders to obtain access-granting credentials.
+Moreover, certain other parameters (access control for lender self-onboarding, minimum deposit amounts, fixed duration markets etc) can be adjusted in V2 by way of constraining access through _pre-transaction hooks_. Some hooks - such as those relating to access control - permit borrowers to add or remove provider contracts after deployment in order to fine-tune ways for lenders to obtain access-granting credentials.
 
 Wildcat inverts the typical on-chain credit model whereby borrowers appeal to an existing pool of lenders willing to loan their assets. Instead, a Wildcat borrower crafts their market/s the way that best suits them and would-be lenders engage thereafter.
 
