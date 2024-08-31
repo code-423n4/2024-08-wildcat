@@ -121,18 +121,3 @@ As assets become available, they can be paid to the withdrawal batch. A check fo
 - upon a call to `repayAndProcessUnpaidWithdrawalBatches` (for unpaid batches).
 
 Once an amount of underlying assets is paid to the batch, the corresponding scaled amount is actually burned: it is removed from the market's total supply, stops accruing interest and becomes available for withdrawal execution by lenders in the batch. These paid-for withdrawals are then moved into the pool of *unclaimed withdrawals* (`state.normalizedUnclaimedWithdrawals`) representing the amount of underlying assets that are still in the market but which can not be borrowed against and can not be counted toward the reserve ratio, protocol fees or new withdrawal payments.
-
-
-sf = 1
-wd 100
-liquidity: 100
-
-sf = 2
-wd 200
-scaledAmount = 100
-liquidity: 200
-
-scaledPaid = 200
-normalizedPaid = 300
-scaledTotal = 200
-lender 2 gets: 1/2 of 300: 150
