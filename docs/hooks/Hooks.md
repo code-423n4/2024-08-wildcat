@@ -34,8 +34,8 @@ Code: [src/types/HooksConfig.sol](https://github.com/code-423n4/2024-08-wildcat/
 
 The `HooksConfig` structure is the hooks configuration for a market. It defines the address of the market's hooks instance and tells the market which hooks should be invoked. The data type is defined alongside a library which actually executes the calls to the hooks instance.
 
-[HooksConfig](Hooks%20150b66c642c643f3927a464a9fe6b5d7/HooksConfig%205ebe318281ac4266bacb611b8656c2a8.md)
+## `Factory`
 
-[Factory](Hooks%20150b66c642c643f3927a464a9fe6b5d7/Factory%20f48e841f20ea46a88d9c9e26a0220378.md)
+Code: [src/types/HooksConfig.sol](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol)
 
-[How hooks work](./How%20Hooks%20Work.md)
+[How Hooks Work](./How%20Hooks%20Work.md)
