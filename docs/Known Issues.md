@@ -40,9 +40,9 @@ We are aware that deposits, withdrawals, and even transfers incur some inevitabl
 
 So for example, we would not accept a finding that says you could do ten million transfers to accumulate ten million wei worth of the market token. On the other hand, in V1 there was a finding where the dust could cause a market to be impossible to close, which is why we now round down for withdrawal payments to a batch.
 
-**Some assembly blocks leave dirty bits in memory**
+**Some assembly blocks leave dirty bytes in memory**
 
-For example, in `HooksConfig`, all of the calls from a market to the various hook functions are done in assembly, with the calldata written to unallocated memory that is left as is at the end of the call. We would only accept a finding on this subject if it demonstrated a specific attack showing this is unsafe or can lead to buggy behavior.
+For example, in `HooksConfig`, all of the calls from a market to the various hook functions are done in assembly, with the calldata written to unallocated memory that is left as is at the end of the call. We would only accept a finding on this subject if it demonstrated a specific attack that could break the market in some way.
 
 **It is possible for markets to be constructed in a way that makes it impossible for anyone to request a withdrawal**
 
