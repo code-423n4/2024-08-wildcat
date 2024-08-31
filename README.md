@@ -375,6 +375,9 @@ We are aware of some aspects of this already [see: https://docs.wildcat.finance/
 
 - Consider ways in which removing access (borrowers from the archcontroller, borrowers playing with hooks) can lead to the inability to interact correctly with markets.
 
+- Consider ways in which the access control hooks could be made to always revert.
+  - Excluding the known issue that a borrower can add role providers that throw with OOG
+
 #### Market Parameters
 
 - Consider ways in which market interest rates can be manipulated to produce results that are outside of specified limits.
