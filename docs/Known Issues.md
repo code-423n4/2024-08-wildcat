@@ -16,7 +16,7 @@ The example given is also an extreme one, in reality it'd much more likely be a 
 
 **Bad hooks implementations**
 
-If any of the hooks that are enabled for a market can revert unexpectedly, the corresponding market function may become permanently disabled. This is considered a known/unfixable issue with respect to the market, but if such an issue is actually discovered in a hooks template we have developed, this is a major vulnerability that should be reported.
+If any of the hooks that are enabled for a market can revert unexpectedly, the corresponding market function may become permanently disabled. This is considered a known/unfixable issue with respect to the market, but if such an issue is actually discovered in a hooks template we have developed, this should be reported.
 
 **Sanctioned account handling can lead to unexpected behavior on markets with withdrawal restrictions**
 
@@ -57,3 +57,7 @@ Unfortunately it is not possible to remove this problem without eliminating cert
 **Reliance on Chainalysis**
 
 If the Chainalysis sanctions oracle were to be compromised or otherwise start flagging accounts as sanctioned that in reality are not, that would lead to those accounts being frozen on all wildcat markets they lend to.
+
+**Deposits can be accepted despite being under the minimum deposit**
+
+Because `onDeposit` takes a scaled token amount which gets normalized using the scale factor, it's possible to deposit an amount slightly under the configured minimum which still gets accepted. This is simply part of the rounding error issue described above.
