@@ -12,6 +12,7 @@ Each of the following is considered a core function on the WildcatMarket contrac
 - `setMaxTotalSupply`
 - `nukeFromOrbit`
 - `setAnnualInterestAndReserveRatioBips`
+- `setProtocolFeeBips`
 
 Each of these functions has a corresponding hook that can be called on the configured hooks contract, as well as a flag in the market's hooks configuration (`HooksConfig`) indicating whether the hook _should_ be called.
 
