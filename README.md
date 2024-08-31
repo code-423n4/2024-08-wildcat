@@ -16,27 +16,10 @@ Mr Anderson, welcome back. We missed you.
 - Starts August 31, 2024 20:00 UTC
 - Ends September 18, 2024 20:00 UTC
 
-**Zenith Side Pool**
-- Two [Zenith](https://code4rena.com/zenith) Researchers (ZRs) are designated as leads for the audit ("LZRs"), with teams counting as one.
-- Z pool is split 60/40 among LZRs based on their Gatherer score.
-- LZRs also compete for a portion of HM awards and are eligible for Hunter/Gatherer bonuses.
-
-**Dark Horse Bonus Pool**
-Dark Horse is (1) a non-LZR who (2) finishes in the top 5, and (3) outperforms (or ties) the top-ranked LZR auditor based on [Gatherer score](https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors). Dark Horse awards come out of the Z pool.
-
-- If an LZR ranks outside the top 2 (by [Top Gatherer score](https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)):
-    - 50% of their share of the Z pool goes to the Dark Horse bonus pool
-- If an LZR ranks outside the top 5 (by [Top Gatherer score](https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors)):
-    - The LZR forfeits their share of the Z pool (but are still eligible for HM / QA awards)
-    - 50% of their share of the Z pool goes to the Dark Horse bonus pool
-    - 50% of their share of the Z pool is refunded to sponsor
-- Dark Horse awards are distributed using C4’s ranked curve. 
-
-Specific edge cases:
-- If no lead ranks outside the top 2, no Dark Horse bonus is awarded.
-- In the event that no LZRs rank in the top 5, the Dark Horse pool will be distributed, but only the top 5 ranked competitors will earn the Dark Horse achievement for the competition.
-- Any unused portion of the Z pool is returned to the Sponsor
-
+**Z Pool and Dark Horse Bonus Pool**
+- This audit includes two [Zenith](https://code4rena.com/zenith) Researchers (ZRs), who are designated as leads for the audit ("LZRs").
+- Dark Horse wardens earn a portion of the Z pool by outperforming (or tying) the top-ranked LZR auditor based on [Gatherer score](https://docs.code4rena.com/awarding/incentive-model-and-awards#bonuses-for-top-competitors). 
+- For more details, see [Z Pool / Dark Horse bonus pool distribution rules](https://docs.code4rena.com/roles/certified-contributors)
 
 # Overview
 
