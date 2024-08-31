@@ -9,3 +9,4 @@
     - [How hooks work](./hooks/How%20Hooks%20Work.md)
     - templates/
         - [Access Control Hooks](./hooks/templates/Access%20Control%20Hooks.md)
+        - [Fixed Term Loan Hooks](./hooks/templates/Fixed%20Term%20Loan%20Hooks.md)
