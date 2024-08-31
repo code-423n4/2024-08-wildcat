@@ -8,17 +8,15 @@ Hooks can not modify internal behavior of the market and do not have any privile
 
 **Exceptions to the above**
 
-There are three exceptions to the behavior described above.
+There are some exceptions to the behavior described above:
 
-The rule about not modifying the market behavior is violated by `setAnnualInterestAndReserveRatioBips` - when a market's APR or reserve ratio are changed, the associated hook has the ability to modify those two values.
-
-The rule about not modifying the market behavior is also violated by `onCreateMarket` which can modify the `HooksConfig` given by the borrower when a market is being deployed.
-
-The rule about only providing intermediate state (i.e. before execution of the action) is violated by the `queueWithdrawal` functions - when a withdrawal is queued, the intermediate state provided to the hooks call is the state _after_ the market's `pendingWithdrawalExpiry` is updated. This ensures the hook has access to the withdrawal expiry if that is ever needed.
+- The rule about not modifying the market behavior is violated by `setAnnualInterestAndReserveRatioBips` - when a market's APR or reserve ratio are changed, the associated hook has the ability to modify those two values.
+- Behavior is also modified by `onCreateMarket` which can modify the `HooksConfig` given by the borrower when a market is being deployed.
+- The rule about only providing intermediate state (i.e. before execution of the action) is violated by the `queueWithdrawal` functions - when a withdrawal is queued, the intermediate state provided to the hooks call is the state _after_ the market's `pendingWithdrawalExpiry` is updated. This ensures the hook has access to the withdrawal expiry if that is ever needed.
 
 ## `extraData` buffer
 
-In a call to one of the core functions listed above, the caller can append arbitrary bytes to the end of the function calldata. If they do, these bytes will be provided to the call to the hooks contract in the `bytes extraData` field. The primary use-case for this field is for the access control hooks, where the caller may need to provide a signature, merkle proof, or some other verification data in order to be authenticated to a particular market.
+In a call to one of the core functions listed below, the caller can append arbitrary bytes to the end of the function calldata. If they do, these bytes will be provided to the call to the hooks contract in the `bytes extraData` field. The primary use-case for this field is for the access control hooks, where the caller may need to provide a signature, merkle proof, or some other verification data in order to be authenticated to a particular market.
 
 The `extraData` field is not part of the market's function signatures; the raw bytes must be appended to the end without ABI offset or length fields, and without padding to the closest word (otherwise the calculated length will be incorrect).
 
