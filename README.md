@@ -70,7 +70,7 @@ The Wildcat protocol itself coalesces around a single contract - the [archcontro
 
 Borrowers deploy V2 markets through the [hooks factory](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol), either deploying a new hook instance parameterised the way they wish (cloning an authorised hooks template contract approved by the archcontroller owners) or referencing an existing hook instance. Lenders can obtain access by receiving a credential via an access control hook, which may have one or many providers (for more on this, see [here](https://docs.wildcat.finance/technical-overview/security-developer-dives/hooks/access-control-hooks)).
 
-Lenders can deposit assets to any markets they have a credential for so long as it has not expired, and lenders that have received a credential once are always capable of filing withdrawal requests. In exchange for their deposits, they receive a _market token_ which has been parameterised by the borrower: you might receive Code4rena Dai Stablecoin - ticker c4DAI - for depositing DAI into a market run by Code4rena. Or C4 Wrapped Ether (code423n4WETH).
+Lenders can deposit assets to any markets they have a credential for so long as it has not expired, and lenders that have deposited or received market tokens while having a valid credential are always capable of filing withdrawal requests. In exchange for their deposits, they receive a _market token_ which has been parameterised by the borrower: you might receive Code4rena Dai Stablecoin - ticker c4DAI - for depositing DAI into a market run by Code4rena. Or C4 Wrapped Ether (code423n4WETH).
 
 These market tokens are _rebasing_ so as to always be redeemable at parity for the underlying asset of a market (provided it has sufficient liquid reserves) - as time goes on, interest inflates the supply of market tokens to be consistent with the overall debt that is owed by the borrower. The interest rate compounds every time a non-static call is made to the market contract and the scale factor is updated.
 
@@ -263,7 +263,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 
 | Question                                | Answer                       |
 | --------------------------------------- | ---------------------------- |
-| ERC20 used by the protocol              | ERC-20s used as underlying assets for markets require no fee on transfer, `totalSupply` to be not at all close to 2^128, arbitrary mint/burn must not be possible, and `name`, `symbol` and `decimals` must all return valid results. Creating markets for rebasing tokens breaks the underlying interest rate model.      |
+| ERC20 used by the protocol              | ERC-20s used as underlying assets for markets require no fee on transfer, `totalSupply` to be not at all close to 2^128, arbitrary mint/burn must not be possible, and `name`, `symbol` and `decimals` must all return valid results (for name and symbol, either bytes32 or a string). Creating markets for rebasing tokens breaks the underlying interest rate model.      |
 | Test coverage                           | Lines: 79.64% - Functions: 84.05%                          |
 | ERC721 used  by the protocol            |            None              |
 | ERC777 used by the protocol             |           None                |
@@ -310,52 +310,46 @@ N/A
 
 ## Main Invariants
 
-- Properties that should NEVER be broken under any circumstance:
+Properties that should NEVER be broken under any circumstance:
 
-
-- Market parameters should never be able to exit the bounds defined by the factory which deployed it.
-
-
-
-- The supply of the market token and assets owed by the borrower should always match.
-
-
-
-- The assets of a market should never be able to be withdrawn by anyone that is not the borrower or a lender [PENDING Dillon on detail here]. [Exceptions: balances being transferred to a blocked account's escrow contract and collection of protocol fees.]
-
-
-
-- Asset deposits not made via deposit should not impact internal accounting (they only increase totalAssets and are effectively treated as a payment by the borrower).
-
-
-
-- Addresses without [REDACTED: Pending Dillon] should never be able to adjust market token supply.
-
-
+**Arch Controller**
 
 - Borrowers can only be registered with the archcontroller by the archcontroller owner.
 
-
-
 - Markets and hook instances can only be deployed by borrowers currently registered with the archcontroller.
 
+**Markets using `AccessControlHooks`**
 
+- The market parameters should never be able to exit the bounds defined in `MarketConstraintHooks`.
 
-- Withdrawal execution can only transfer assets that have been counted as paid assets in the corresponding batch, i.e. lenders with withdrawal requests can not withdraw more than their pro-rata share of the batch's paid assets.
+**All Markets**
 
+- Underlying assets held by a market can only be transferred out through borrows, withdrawal execution or collection of protocol fees.
+  - Does not apply to other assets, which can be recovered by the borrower.
 
+- Underlying assets transferred to a market outside of a deposit are treated as a payment by the borrower, i.e. they do not mint new market tokens or otherwise affect internal accounting other than by increasing `totalAssets`.
 
-- Once claimable withdrawals have been set aside for a withdrawal batch (counted toward normalizedUnclaimedWithdrawals and batch.normalizedAmountPaid), they can only be used for that purpose (i.e. the market will always maintain at least that amount in underlying assets until lenders with a request from that batch have withdrawn the assets).
+- Addresses without [REDACTED: Pending Dillon] should never be able to adjust market token supply.
 
+- A deposit should never be able to cause a market's total supply to exceed its `maxTotalSupply` in the same transaction.
+  - It can exceed it in the next block after interest is accrued.
+  - This excludes negligible amounts from the rounding error involved in normalizing the new scaled supply.
 
+- Withdrawal execution can only transfer assets that have been counted as paid assets in the corresponding batch.
+  - The sum of all transfer amounts for withdrawal executions in a batch must be less than or equal to `batch.normalizedAmountPaid`
+
+- Lenders in a withdrawal batch always receive a pro-rata share of the assets paid to the batch, proportional to the number of scaled tokens they locked in that withdrawal batch (rounding error dust must only reduce the amount paid to lenders).
+
+- Once assets have been set aside for a withdrawal batch (counted toward `state.normalizedUnclaimedWithdrawals` and `batch.normalizedAmountPaid`), they can only be used for that purpose (i.e. the market will always maintain at least that amount in underlying assets until lenders with a request from that batch have withdrawn the assets).
+  - Related: `state.normalizedUnclaimedWithdrawals` must always equal the sum of all withdrawal batches' `normalizedAmountPaid` minus the sum of all transfer amounts paid to batches (and the sum of all rounding errors accumulated when calculating pro-rata withdrawal amounts).
 
 - In any non-static function which touches a market's state:
 
-* Prior to executing the function's logic, if time has elapsed since the last update, interest, protocol fees and delinquency fees should be accrued to the market state and pending/expired withdrawal batches should be processed.
+  * Prior to executing the function's logic, if time has elapsed since the last update, interest, protocol fees and delinquency fees should be accrued to the market state and pending/expired withdrawal batches should be processed.
 
-* At the end of the function, the updated state is written to storage and the market's delinquency status is updated.
+  * At the end of the function, the updated state is written to storage and the market's delinquency status is updated.
 
-* Assets are only paid to newer withdrawal batches if the market has sufficient assets to close older batches.
+  * Assets are only paid to newer withdrawal batches if the market has sufficient assets to close older batches.
 
 
 
