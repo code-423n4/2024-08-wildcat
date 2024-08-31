@@ -68,16 +68,16 @@ The protocol monitors for addresses that are flagged by the Chainalysis oracle a
 
 The Wildcat protocol itself coalesces around a single contract - the [archcontroller](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/WildcatArchController.sol). This contract determines which factories can be used, which markets have already been deployed and which addresses are permitted to deploy hook instances and market contracts from said factories.
 
-Borrowers deploy V2 markets through the [hooks factory](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol), either deploying a new hook instance parameterised the way they wish (cloning an authorised hooks template contract approved by the archcontroller owners) or referencing an existing hook instance. Lenders can obtain access by receiving a credential via an access control hook, which may have one or many providers (for more on this, see [here](https://docs.wildcat.finance/technical-overview/security-developer-dives/hooks/access-control-hooks)).
+Borrowers deploy V2 markets through the [hooks factory](https://github.com/code-423n4/2024-08-wildcat/blob/main/src/HooksFactory.sol), either deploying a new hook instance parameterised the way they wish (cloning an authorised hooks template contract approved by the archcontroller owners) or referencing an existing hook instance. Lenders can obtain access by receiving a credential via an access control hook, which may have one or many providers (for more on this, see [here](https://github.com/code-423n4/2024-08-wildcat/blob/main/docs/hooks/templates/Access%20Control%20Hooks.md)).
 
-Lenders can deposit assets to any markets they have a credential for so long as it has not expired, and lenders that have received a credential once are always capable of filing withdrawal requests. In exchange for their deposits, they receive a _market token_ which has been parameterised by the borrower: you might receive Code4rena Dai Stablecoin - ticker c4DAI - for depositing DAI into a market run by Code4rena. Or C4 Wrapped Ether (code423n4WETH).
+Lenders can deposit assets to any markets they have a credential for so long as it has not expired, and lenders that have deposited or received market tokens while having a valid credential are always capable of filing withdrawal requests. In exchange for their deposits, they receive a _market token_ which has been parameterised by the borrower: you might receive Code4rena Dai Stablecoin - ticker c4DAI - for depositing DAI into a market run by Code4rena. Or C4 Wrapped Ether (code423n4WETH).
 
 These market tokens are _rebasing_ so as to always be redeemable at parity for the underlying asset of a market (provided it has sufficient liquid reserves) - as time goes on, interest inflates the supply of market tokens to be consistent with the overall debt that is owed by the borrower. The interest rate compounds every time a non-static call is made to the market contract and the scale factor is updated.
 
 The interest rate paid by the borrower can comprise of up to three distinct figures:
 
   - The base APR (accruing to the lender, expressed in bips when a market is deployed),
-  - The protocol fee APR (accruing to the Wildcat protocol itself, expressed as a percentage of the base APR), and
+  - The protocol fee APR (accruing to the Wildcat protocol itself, expressed in bips as a fraction of the base APR), and
   - The penalty APR (accruing to the lender, expressed in bips when a market is deployed).
 
 A borrower deploying a market with a base APR of 10%, a protocol APR of 5% and a penalty APR of 20% will pay a true APR of 10.5% (10% + (10% * 5%)) under normal circumstances, and 30.5% when the market has been delinquent for long enough for the penalty APR to activate. The protocol APR percentage doesn't factor in penalty APRs even while they're active.
@@ -263,7 +263,7 @@ The fundamental core of the protocol (V1) has previously been audited by Code4re
 
 | Question                                | Answer                       |
 | --------------------------------------- | ---------------------------- |
-| ERC20 used by the protocol              | ERC-20s used as underlying assets for markets require no fee on transfer, `totalSupply` to be not at all close to 2^128, arbitrary mint/burn must not be possible, and `name`, `symbol` and `decimals` must all return valid results. Creating markets for rebasing tokens breaks the underlying interest rate model.      |
+| ERC20 used by the protocol              | ERC-20s used as underlying assets for markets require no fee on transfer, `totalSupply` to be not at all close to 2^128, arbitrary mint/burn must not be possible, and `name`, `symbol` and `decimals` must all return valid results (for name and symbol, either bytes32 or a string). Creating markets for rebasing tokens breaks the underlying interest rate model.      |
 | Test coverage                           | Lines: 79.64% - Functions: 84.05%                          |
 | ERC721 used  by the protocol            |            None              |
 | ERC777 used by the protocol             |           None                |
@@ -310,52 +310,48 @@ N/A
 
 ## Main Invariants
 
-- Properties that should NEVER be broken under any circumstance:
+Properties that should NEVER be broken under any circumstance:
 
-
-- Market parameters should never be able to exit the bounds defined by the factory which deployed it.
-
-
-
-- The supply of the market token and assets owed by the borrower should always match.
-
-
-
-- The assets of a market should never be able to be withdrawn by anyone that is not the borrower or a lender [PENDING Dillon on detail here]. [Exceptions: balances being transferred to a blocked account's escrow contract and collection of protocol fees.]
-
-
-
-- Asset deposits not made via deposit should not impact internal accounting (they only increase totalAssets and are effectively treated as a payment by the borrower).
-
-
-
-- Addresses without [REDACTED: Pending Dillon] should never be able to adjust market token supply.
-
-
+**Arch Controller**
 
 - Borrowers can only be registered with the archcontroller by the archcontroller owner.
 
-
-
 - Markets and hook instances can only be deployed by borrowers currently registered with the archcontroller.
 
+**Markets using `AccessControlHooks`**
 
+- The market parameters should never be able to exit the bounds defined in `MarketConstraintHooks`.
 
-- Withdrawal execution can only transfer assets that have been counted as paid assets in the corresponding batch, i.e. lenders with withdrawal requests can not withdraw more than their pro-rata share of the batch's paid assets.
+- Accounts which are blocked from deposits, or which do not have a credential on markets which require it for deposits, should never be able to mint market tokens.
 
+- Accounts which are flagged as sanctioned on Chainalysis should never be able to successfully modify the state of the market unless the borrower specifically overrides their sanctioned status in the sentinel (other than token approvals, or through their tokens being withdrawn & escrowed in nukeFromOrbit and executeWithdrawal).
 
+**All Markets**
 
-- Once claimable withdrawals have been set aside for a withdrawal batch (counted toward normalizedUnclaimedWithdrawals and batch.normalizedAmountPaid), they can only be used for that purpose (i.e. the market will always maintain at least that amount in underlying assets until lenders with a request from that batch have withdrawn the assets).
+- Underlying assets held by a market can only be transferred out through borrows, withdrawal execution or collection of protocol fees.
+  - Does not apply to other assets, which can be recovered by the borrower.
 
+- Underlying assets transferred to a market outside of a deposit are treated as a payment by the borrower, i.e. they do not mint new market tokens or otherwise affect internal accounting other than by increasing `totalAssets`.
 
+- A deposit should never be able to cause a market's total supply to exceed its `maxTotalSupply` in the same transaction.
+  - It can exceed it in the next block after interest is accrued.
+  - This excludes negligible amounts from the rounding error involved in normalizing the new scaled supply.
+
+- Withdrawal execution can only transfer assets that have been counted as paid assets in the corresponding batch.
+  - The sum of all transfer amounts for withdrawal executions in a batch must be less than or equal to `batch.normalizedAmountPaid`
+
+- Lenders in a withdrawal batch always receive a pro-rata share of the assets paid to the batch, proportional to the number of scaled tokens they locked in that withdrawal batch (rounding error dust must only reduce the amount paid to lenders).
+
+- Once assets have been set aside for a withdrawal batch (counted toward `state.normalizedUnclaimedWithdrawals` and `batch.normalizedAmountPaid`), they can only be used for that purpose (i.e. the market will always maintain at least that amount in underlying assets until lenders with a request from that batch have withdrawn the assets).
+  - Related: `state.normalizedUnclaimedWithdrawals` must always equal the sum of all withdrawal batches' `normalizedAmountPaid` minus the sum of all transfer amounts paid to batches (and the sum of all rounding errors accumulated when calculating pro-rata withdrawal amounts).
 
 - In any non-static function which touches a market's state:
 
-* Prior to executing the function's logic, if time has elapsed since the last update, interest, protocol fees and delinquency fees should be accrued to the market state and pending/expired withdrawal batches should be processed.
+  * Prior to executing the function's logic, if time has elapsed since the last update, interest, protocol fees and delinquency fees should be accrued to the market state and pending/expired withdrawal batches should be processed.
 
-* At the end of the function, the updated state is written to storage and the market's delinquency status is updated.
+  * At the end of the function, the updated state is written to storage and the market's delinquency status is updated.
 
-* Assets are only paid to newer withdrawal batches if the market has sufficient assets to close older batches.
+  * Assets are only paid to newer withdrawal batches if the market has sufficient assets to close older batches.
 
 
 
@@ -369,19 +365,18 @@ We are aware of some aspects of this already [see: https://docs.wildcat.finance/
 
 - More generally, we have removed the controller role and moved all market constraining mechanisms into the hooks: this is a non-trivial change if you previously audited Wildcat V1.
 
-[PENDING: Dillon, anything else either hooks related or below that needs adjusting to reflect codebase changes?]
-
 - Beyond these, the areas of concern remain the same as they were for Wildcat V1 (as there's always a non-zero chance something was missed last time!):
 
 #### Access Controls and Permissions
-
-- Consider ways in which borrower addresses, hooks templates or markets can be added to the archcontroller either without the specific approval of its owner or as a result of contract deployment.
 
 - Consider ways in which lenders can receive a credential for a market without 'correctly' passing through the hook instance specified by the borrower that deployed it.
 
 - Consider ways in which access to market interactions can be maliciously altered to either block or elevate parties outside of the defined flow.
 
 - Consider ways in which removing access (borrowers from the archcontroller, borrowers playing with hooks) can lead to the inability to interact correctly with markets.
+
+- Consider ways in which the access control hooks could be made to always revert.
+  - Excluding the known issue that a borrower can add role providers that throw with OOG
 
 #### Market Parameters
 
@@ -420,7 +415,7 @@ You should bear in mind that this is a pretty unusual set of contracts compared 
 | Role                                | Description                       |
 | --------------------------------------- | ---------------------------- |
 | Archcontroller Operator                          |  Dictates which addresses are allowed to deploy markets and hooks instances (i.e. act as borrowers).  Can deploy new market factories and hooks templates to extend protocol functionality, as well as adjusting fee parameters. Can blacklist ERC-20s to prevent future markets being created for them. Can remove borrowers from archcontroller (preventing them from future deployments), and can deregister hooks instances and factories to prevent the deployment of any further markets. Can effectively pause the entire protocol by updating the associated SphereX transaction monitoring engine to one that rejects all transactions. Cannot manipulate, update or intervene in extant markets beyond aforementioned SphereX pause power.     |
-| Borrowers                             |  Capable of deploying hook instances markets parameterised as they wish, and determine the conditions/policies under which an address can engage with the market as a lender. Has the ability to adjust APR, capacity and certain parameters of hooks (e.g. providers) once deployed. Can terminate/close markets at will. _Fundamental_ assumption is that assets will be returned to markets to honour required reserves upon demand.                        |
+| Borrowers                             |  Capable of deploying hook instances and markets parameterised as they wish, and determine the conditions/policies under which an address can engage with the market as a lender. Has the ability to adjust APR, capacity and certain parameters of hooks (e.g. providers) once deployed. Can terminate/close markets at will. _Fundamental_ assumption is that assets will be returned to markets to honour required reserves upon demand.                        |
 | Lenders                             |  Authorised via hooks to deposit/withdraw from markets. Unauthorised addresses are unable to deposit in a way that triggers supply changes.                       |
 
 ## Any novel or unique curve logic or mathematical models implemented in the contracts:
