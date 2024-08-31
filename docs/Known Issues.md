@@ -32,7 +32,7 @@ We anticipate that, for any features added in the future, considering an account
 
 Any other issues with the ability of a hooks instance to track the state of the market should be reported.
 
-**Conversion between scaled and normalized amounts have some rounding error**
+**Conversion between scaled and normalized amounts has some rounding error**
 
 We are aware that deposits, withdrawals, and even transfers incur some inevitable rounding error. We will only accept findings that show either:
 - This dust is sufficient to break something in the market, or
@@ -50,7 +50,7 @@ While we tried our best to ensure lenders who deposit to a market can not have t
 
 The way this would work is:
 
-- Create a market with credentials required for withdrawal but not for deposit or transfers.
+- Create a market with credentials required for withdrawals but not for deposits or transfers.
 - Never add any role providers.
 - Lenders can deposit, but since they'll never have a credential, they will never be given the `isKnownLender` flag, and thus can never withdraw.
 
